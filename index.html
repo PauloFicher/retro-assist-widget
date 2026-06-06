@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retro Assist Widget</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-claude">
+  <!-- Scanlines & CRT screen overlay -->
+  <div class="crt-overlay"></div>
+  <div class="crt-screen">
+    
+    <!-- Widget Outer Border Frame -->
+    <div class="terminal-frame">
+      
+      <!-- Custom Frameless Titlebar -->
+      <header class="titlebar">
+        <div class="draggable-region">
+          <span class="system-status-indicator">⚡</span>
+          <span class="titlebar-text">RETRO_DASH // v1.02</span>
+        </div>
+        <div class="window-controls">
+          <button id="btn-config" class="ctrl-btn">⚙</button>
+          <button id="btn-minimize" class="ctrl-btn">▕</button>
+          <button id="btn-close" class="ctrl-btn">✖</button>
+        </div>
+      </header>
+
+      <!-- Assistant Selector Switch -->
+      <section class="assistant-selector">
+        <div class="selector-label" id="lbl-select-engine">SELECT ENGINE:</div>
+        <div class="selector-buttons">
+          <button id="select-claude" class="engine-btn active" data-engine="claude">CLAUDE</button>
+          <button id="select-gemini" class="engine-btn" data-engine="gemini">GEMINI</button>
+          <button id="select-codex" class="engine-btn" data-engine="codex">CODEX</button>
+          <button id="select-opencode" class="engine-btn" data-engine="opencode">O_CODE</button>
+        </div>
+      </section>
+
+      <!-- Screen Bevel Separator -->
+      <div class="separator-line"></div>
+
+      <!-- Main Screen Content Area -->
+      <main class="terminal-content">
+        
+        <!-- ================= CLAUDE PANEL ================= -->
+        <section id="panel-claude" class="stat-panel active">
+          <div class="panel-header">CLAUDE_CODE_STREAM</div>
+          
+          <div class="session-info-box">
+            <div class="info-row">
+              <span class="label" id="lbl-status">SESSION STATUS:</span>
+              <span id="claude-status" class="value text-glow italic">INACTIVE</span>
+            </div>
+            <div class="info-row">
+              <span class="label" id="lbl-pid">ACTIVE PID:</span>
+              <span id="claude-pid" class="value">N/A</span>
+            </div>
+            <div class="info-row">
+              <span class="label" id="lbl-plan">PLAN TIER:</span>
+              <span id="claude-tier" class="value text-warning">PRO_PLAN</span>
+            </div>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="m-title">INPUT_TOKENS</div>
+              <div id="claude-input" class="m-val">0</div>
+            </div>
+            <div class="metric-card">
+              <div class="m-title">OUTPUT_TOKENS</div>
+              <div id="claude-output" class="m-val">0</div>
+            </div>
+            <div class="metric-card">
+              <div class="m-title">CACHE_WRITES</div>
+              <div id="claude-cwrite" class="m-val">0</div>
+            </div>
+            <div class="metric-card">
+              <div class="m-title">CACHE_READS</div>
+              <div id="claude-cread" class="m-val">0</div>
+            </div>
+          </div>
+
+          <div class="cost-readout">
+            <span class="cost-lbl" id="lbl-cost">ESTIMATED COST:</span>
+            <span id="claude-cost" class="cost-val">$0.0000 USD</span>
+          </div>
+
+          <div class="sub-features-row">
+            <div class="feat-box">
+              <div class="f-lbl" id="lbl-skills">SKILLS INSTALLED</div>
+              <div id="claude-skills-count" class="f-val">0</div>
+            </div>
+            <div class="feat-box">
+              <div class="f-lbl" id="lbl-logros">LOGROS UNLOCKED</div>
+              <div id="claude-logros-count" class="f-val">1/8</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= GEMINI (ANTIGRAVITY) PANEL ================= -->
+        <section id="panel-gemini" class="stat-panel">
+          <div class="panel-header">ANTIGRAVITY_LOGS</div>
+          
+          <div class="session-info-box">
+            <div class="info-row">
+              <span class="label" id="lbl-gem-core">CORE_ENGINE:</span>
+              <span class="value text-cyan">GEMINI_3.5_FLASH</span>
+            </div>
+            <div class="info-row">
+              <span class="label" id="lbl-gem-state">WORKSPACE STATE:</span>
+              <span class="value text-glow text-cyan">CONNECTED</span>
+            </div>
+          </div>
+
+          <div class="metrics-grid col-3">
+            <div class="metric-card">
+              <div class="m-title">CONVERSATIONS</div>
+              <div id="gemini-convs" class="m-val">0</div>
+            </div>
+            <div class="metric-card">
+              <div class="m-title">TOTAL STEPS</div>
+              <div id="gemini-steps" class="m-val">0</div>
+            </div>
+            <div class="metric-card">
+              <div class="m-title">GEMINI COST</div>
+              <div id="gemini-cost" class="m-val">$0.00</div>
+            </div>
+          </div>
+
+          <div class="log-output-box">
+            <div class="box-title" id="lbl-gem-translation-h">LATEST_TRANSLATION_STEP:</div>
+            <div id="gemini-latest-log" class="log-terminal-lines">
+              <div class="log-line">> WAITING FOR GEMINI API ACTION...</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= CODEX PANEL ================= -->
+        <section id="panel-codex" class="stat-panel">
+          <div class="panel-header">CODEX_COPILOT_TRACK</div>
+          
+          <div class="session-info-box">
+            <div class="info-row">
+              <span class="label" id="lbl-codex-observer">IDE_OBSERVER:</span>
+              <span class="value text-amber">RUNNING</span>
+            </div>
+          </div>
+
+          <div class="system-monitor-box">
+            <div class="sys-title" id="lbl-codex-workload">IDE WORKLOAD (CPU/RAM):</div>
+            <div id="codex-process-list" class="sys-process-list">
+              <div class="sys-row"><span class="proc-name">code.exe</span><span class="proc-stat">0.0% CPU // 0 MB</span></div>
+              <div class="sys-row"><span class="proc-name">cursor.exe</span><span class="proc-stat">0.0% CPU // 0 MB</span></div>
+            </div>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="m-title">AUTOCOMPLETES</div>
+              <div id="codex-autocompletes" class="m-val text-amber">142</div>
+            </div>
+            <div class="metric-card">
+              <div class="m-title">LINES ACCEPTED</div>
+              <div id="codex-lines" class="m-val text-amber">648</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= OPENCODE PANEL ================= -->
+        <section id="panel-opencode" class="stat-panel">
+          <div class="panel-header">OPENCODE_LOCAL_HOST</div>
+          
+          <div class="session-info-box">
+            <div class="info-row">
+              <span class="label" id="lbl-opencode-state">LOCAL API STATE:</span>
+              <span class="value text-matrix">LISTENING_11434</span>
+            </div>
+            <div class="info-row">
+              <span class="label" id="lbl-opencode-model">MODEL LOADED:</span>
+              <span class="value text-matrix">QWEN_2.5_CODER_7B</span>
+            </div>
+          </div>
+
+          <div class="system-monitor-box">
+            <div class="sys-title" id="lbl-opencode-load-stats">TERMINAL LOAD STATS:</div>
+            <div class="sys-progress-bar-row">
+              <span class="sys-lbl">LLM_CPU:</span>
+              <div class="progress-container"><div id="opencode-cpu-bar" class="progress-fill" style="width: 25%"></div></div>
+              <span id="opencode-cpu-val" class="sys-val">25%</span>
+            </div>
+            <div class="sys-progress-bar-row">
+              <span class="sys-lbl">LLM_RAM:</span>
+              <div class="progress-container"><div id="opencode-ram-bar" class="progress-fill" style="width: 42%"></div></div>
+              <span id="opencode-ram-val" class="sys-val">42%</span>
+            </div>
+          </div>
+
+          <div class="cost-readout matrix">
+            <span class="cost-lbl" id="lbl-opencode-speed">TOKEN_SPEED:</span>
+            <span class="cost-val text-matrix">54.2 tok/s</span>
+          </div>
+        </section>
+
+        <!-- ================= CONFIG PANEL ================= -->
+        <section id="panel-config" class="stat-panel">
+          <div class="panel-header" id="lbl-cfg-header">CONFIG_SYSTEM</div>
+          
+          <div class="config-scroll-area">
+            <div class="config-row">
+              <span class="config-lbl" id="lbl-cfg-lang">LANGUAGE:</span>
+              <select id="cfg-lang" class="config-select">
+                <option value="es">Español</option>
+                <option value="en">English</option>
+                <option value="pt">Português</option>
+              </select>
+            </div>
+
+            <div class="config-row">
+              <span class="config-lbl" id="lbl-cfg-scanlines">SCANLINES:</span>
+              <select id="cfg-scanlines" class="config-select">
+                <option value="high">High</option>
+                <option value="med">Medium</option>
+                <option value="off">Off</option>
+              </select>
+            </div>
+
+            <div class="config-row">
+              <span class="config-lbl" id="lbl-cfg-flicker">SCREEN FLICKER:</span>
+              <select id="cfg-flicker" class="config-select">
+                <option value="on">On</option>
+                <option value="off">Off</option>
+              </select>
+            </div>
+
+            <div class="config-row">
+              <span class="config-lbl" id="lbl-cfg-sound">SOUND FX:</span>
+              <select id="cfg-sound" class="config-select">
+                <option value="on">On</option>
+                <option value="off">Off</option>
+              </select>
+            </div>
+
+            <div class="config-row">
+              <span class="config-lbl" id="lbl-cfg-opacity">OPACITY:</span>
+              <input type="range" id="cfg-opacity" min="60" max="100" value="94" class="config-slider">
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- Bottom Panel / Footer -->
+      <footer class="terminal-footer">
+        <div class="hotkey-tip">HOTKEY: ALT+SHIFT+C</div>
+        <div id="footer-time" class="terminal-time">00:00:00</div>
+      </footer>
+
+    </div>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>

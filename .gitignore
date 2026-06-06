@@ -1,0 +1,35 @@
+# ===================================================
+# RETRO_DASH // .gitignore
+# ===================================================
+
+# Dependencias
+node_modules/
+
+# Builds de Electron (se regeneran con npm run build)
+dist/
+build/
+out/
+
+# Binarios portables y releases (se suben a GitHub Releases)
+releases/
+*.zip
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+
+# Archivos de sistema y temporales
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+.env
+.env.local
+.vscode/
+.idea/
+
+# Datos de sesión / logs runtime
+.claude/
+.gemini/
+.antigravity/
