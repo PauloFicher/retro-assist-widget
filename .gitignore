@@ -10,6 +10,9 @@ dist/
 build/
 out/
 
+# Vercel deployment metadata
+.vercel/
+
 # Binarios portables y releases (se suben a GitHub Releases)
 releases/
 *.zip
