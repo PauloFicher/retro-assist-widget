@@ -67,6 +67,20 @@ let historicalStats = { sessions: 0, input: 0, output: 0, cacheWrite: 0, cacheRe
 let geminiHistory = { conversations: 0, steps: 0, cost: 0 };
 let customSkills = [];
 
+// Shortcut status (from main process)
+window.api.onShortcutStatus((status) => {
+  const hotkeyText = document.querySelector('.hotkey-tip');
+  if (hotkeyText) {
+    if (status.registered) {
+      const dict = TRANSLATIONS[settings.lang] || TRANSLATIONS.es;
+      hotkeyText.textContent = `${dict['lbl-hotkey']} [${status.key}]`;
+    } else {
+      hotkeyText.textContent = '! ATAJO NO DISPONIBLE — REVISAR CONFLICTOS';
+      hotkeyText.style.color = 'var(--color-accent)';
+    }
+  }
+});
+
 // Autocomplete counters for Codex simulation
 let codexCount = 142;
 let codexLineCount = 648;
@@ -285,28 +299,29 @@ cfgSound.addEventListener('change', (e) => {
 cfgOpacity.addEventListener('input', (e) => applyOpacity(e.target.value));
 
 // Sound generator (synthesizes retro beeps via Web Audio API)
+let audioCtx = null;
+let lastBeepTime = 0;
 function playBeep(freq, duration, type = 'sine') {
   if (settings.sound === 'off') return;
+  const now = Date.now();
+  if (now - lastBeepTime < 150) return;
+  lastBeepTime = now;
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
   try {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
-
     oscillator.connect(gainNode);
     gainNode.connect(audioCtx.destination);
-
     oscillator.type = type;
     oscillator.frequency.value = freq;
-    
-    // Low volume
     gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
-
     oscillator.start(audioCtx.currentTime);
     oscillator.stop(audioCtx.currentTime + duration);
-  } catch (e) {
-    // Audio context failed
-  }
+  } catch (e) {}
 }
 
 // Window actions
@@ -319,6 +334,10 @@ btnClose.addEventListener('click', () => {
   setTimeout(() => window.api.closeWindow(), 200);
 });
 
+// Engine selector logic
+const engineButtons = [selectClaude, selectGemini, selectCodex, selectOpencode];
+const panels = [panelClaude, panelGemini, panelCodex, panelOpencode, panelConfig];
+
 // Settings configuration gear button click listener
 btnConfig.addEventListener('click', () => {
   playBeep(700, 0.08, 'triangle');
@@ -329,10 +348,6 @@ btnConfig.addEventListener('click', () => {
   
   panelConfig.classList.add('active');
 });
-
-// Engine selector logic
-const engineButtons = [selectClaude, selectGemini, selectCodex, selectOpencode];
-const panels = [panelClaude, panelGemini, panelCodex, panelOpencode, panelConfig];
 
 engineButtons.forEach(btn => {
   btn.addEventListener('click', (e) => {
@@ -496,13 +511,16 @@ window.api.onActiveSessionUsage((usage) => {
 
 // Logs stream from Claude session
 window.api.onSessionNewEvent((entry) => {
-  // Appends prompts dynamically to Gemini rolling logger as mock logs
   if (entry.type === 'user' && entry.message && entry.message.content) {
     const promptText = entry.message.content.substring(0, 45);
     const line = document.createElement('div');
     line.className = 'log-line';
     line.textContent = `> CLAUDE: "${promptText}..."`;
     geminiLatestLog.appendChild(line);
+    // Keep last 50 lines to prevent unbounded growth
+    while (geminiLatestLog.children.length > 50) {
+      geminiLatestLog.removeChild(geminiLatestLog.firstChild);
+    }
     geminiLatestLog.scrollTop = geminiLatestLog.scrollHeight;
   }
 });
@@ -514,7 +532,15 @@ window.api.onSystemProcesses((procs) => {
     procs.forEach(p => {
       const row = document.createElement('div');
       row.className = 'sys-row';
-      row.innerHTML = `<span class="proc-name">${p.name.toLowerCase()}.exe</span><span class="proc-stat">${p.cpu}% CPU // ${p.ram} MB</span>`;
+      row.textContent = '';
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'proc-name';
+      nameSpan.textContent = `${p.name.toLowerCase()}.exe`;
+      const statSpan = document.createElement('span');
+      statSpan.className = 'proc-stat';
+      statSpan.textContent = `${p.cpu}% CPU // ${p.ram} MB`;
+      row.appendChild(nameSpan);
+      row.appendChild(statSpan);
       codexProcessList.appendChild(row);
 
       // Check for High CPU achievement condition
@@ -584,10 +610,10 @@ function checkAchievements() {
 
   claudeLogrosCount.textContent = `${unlockedCount}/${ACHIEVEMENTS.length}`;
 
-  // Logros box color changes depending on count
+  claudeLogrosCount.className = 'f-val';
   if (unlockedCount >= 6) {
-    claudeLogrosCount.className = 'f-val text-glow';
+    claudeLogrosCount.classList.add('text-glow');
   } else if (unlockedCount >= 3) {
-    claudeLogrosCount.className = 'f-val text-cyan';
+    claudeLogrosCount.classList.add('text-cyan');
   }
 }

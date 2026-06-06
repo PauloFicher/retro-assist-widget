@@ -79,19 +79,29 @@ function cleanupWatchers() {
 app.whenReady().then(() => {
   createWindow();
 
-  // Register Global Shortcut
-  const ret = globalShortcut.register('Alt+Shift+C', () => {
-    if (!mainWindow) return;
-    if (mainWindow.isVisible()) {
-      mainWindow.hide();
-    } else {
-      mainWindow.show();
-      mainWindow.focus();
+  // Register Global Shortcut with fallback
+  const KEYBINDINGS = ['Alt+Shift+C', 'Ctrl+Shift+C', 'Super+Shift+C'];
+  let shortcutRegistered = false;
+  for (const kb of KEYBINDINGS) {
+    if (globalShortcut.register(kb, () => {
+      if (!mainWindow) return;
+      if (mainWindow.isVisible()) {
+        mainWindow.hide();
+      } else {
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    })) {
+      shortcutRegistered = true;
+      if (mainWindow) {
+        mainWindow.webContents.send('shortcut-status', { registered: true, key: kb });
+      }
+      break;
     }
-  });
+  }
 
-  if (!ret) {
-    console.log('Registration failed');
+  if (!shortcutRegistered && mainWindow) {
+    mainWindow.webContents.send('shortcut-status', { registered: false, key: null });
   }
 
   // Periodic watcher for active sessions and system processes
@@ -414,14 +424,12 @@ function processActiveSessionChanges() {
         if (!line.trim()) continue;
         try {
           const entry = JSON.parse(line);
-          // Send active event updates to the renderer
           if (mainWindow) {
             mainWindow.webContents.send('session-new-event', entry);
           }
         } catch (e) {}
       }
 
-      // Also send updated aggregated stats for the session
       const currentStats = parseJsonlTokens(activeSessionFilePath);
       if (mainWindow) {
         mainWindow.webContents.send('active-session-usage', currentStats);

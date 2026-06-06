@@ -20,6 +20,9 @@ contextBridge.exposeInMainWorld('api', {
   onSystemProcesses: (callback) => {
     ipcRenderer.on('system-processes', (event, processes) => callback(processes));
   },
+  onShortcutStatus: (callback) => {
+    ipcRenderer.on('shortcut-status', (event, status) => callback(status));
+  },
 
   // Window control commands
   closeWindow: () => ipcRenderer.send('window-control', 'close'),
