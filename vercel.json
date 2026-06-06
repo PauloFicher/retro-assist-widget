@@ -4,6 +4,9 @@
   "public": true,
   "cleanUrls": true,
   "trailingSlash": false,
+  "outputDirectory": "landing",
+  "installCommand": "",
+  "buildCommand": "",
   "headers": [
     {
       "source": "/(.*)",
